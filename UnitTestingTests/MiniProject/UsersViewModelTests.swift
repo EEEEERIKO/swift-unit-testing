@@ -23,12 +23,24 @@ class UsersViewModelTests: XCTestCase {
     // use XCAssertEqual, fetchUsersCallsCount
     func test_viewModel_whenFetchUsers_callsApiService() {
         let sut = makeSut()
-        // TODO: Implement test
+        
+        XCTAssertEqual(mockService.fetchUsersCallsCount, 0)
+        
+        sut.fetchUsers(completion: {})
+        
+        XCTAssertEqual(mockService.fetchUsersCallsCount, 1)
     }
 
     // assert that the passed url to api service is correct
     func test_viewModel_whenFetchUsers_passesCorrectUrlToApiService() {
-        // TODO: Implement test
+        let sut = makeSut()
+        
+        sut.fetchUsers(completion: {})
+        
+        XCTAssertEqual(
+            mockService.receivedUrlString,
+            "https://jsonplaceholder.typicode.com/users"
+        )
     }
 
     // assert that view model users are updated and error message is nil
@@ -38,27 +50,87 @@ class UsersViewModelTests: XCTestCase {
         )
         let sut = makeSut()
         
-        // TODO: Implement test
+        let expectation = expectation(description: "Users fetched")
+        
+        sut.fetchUsers {
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
+        
+        XCTAssertEqual(sut.users.count, 1)
+        XCTAssertEqual(sut.users.first?.id, 1)
+        XCTAssertEqual(sut.users.first?.name, "name")
+        XCTAssertNil(sut.errorMessage)
     }
 
     // assert that view model error message is "Unexpected error"
     func test_viewModel_fetchUsers_whenInvalidUrl_updatesErrorMessage() {
-        // TODO: Implement test
+        let sut = makeSut()
+        let expectation = expectation(description: "Fetchusers completed")
+        
+        sut.fetchUsers {
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
+        
+        XCTAssertEqual(sut.errorMessage, "Unexpected error")
     }
+    
 
     // assert that view model error message is "Unexpected error"
     func test_viewModel_fetchUsers_whenUnexectedFailure_updatesErrorMessage() {
-        // TODO: Implement test
+        mockService.fetchUsersResult = .failure(.unexpected)
+        
+        let sut = makeSut()
+        let expectation = expectation(description: "Fetchusers completed")
+        
+        sut.fetchUsers {
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
+        
+        XCTAssertEqual(sut.errorMessage, "Unexpected error")
     }
 
     // assert that view model error message is "Error parsing JSON"
     func test_viewModel_fetchUsers_whenParsingFailure_updatesErrorMessage() {
-        // TODO: Implement test
+        mockService.fetchUsersResult = .failure(.parsingError)
+        
+        let sut = makeSut()
+        let expectation = expectation(description: "Fetch users completed")
+        
+        sut.fetchUsers {
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
+        
+        XCTAssertEqual(sut.errorMessage, "Error parsing JSON")
     }
 
     // fetch users with successful result and after calling clear() assert users are empty
     func test_viewModel_clearUsers() {
-        // TODO: Implement test
+        mockService.fetchUsersResult = .success([
+            User(id: 1, name: "name", username: "surname", email: "user@email.com")
+        ])
+        
+        let sut = makeSut()
+        let expectation = expectation(description: "Users fetched")
+        
+        sut.fetchUsers {
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
+        
+        XCTAssertEqual(sut.users.count, 1)
+        
+        sut.clearUsers()
+        
+        XCTAssertTrue(sut.users.isEmpty)
     }
 
     private func makeSut() -> UsersViewModel {
